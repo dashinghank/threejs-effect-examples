@@ -12,7 +12,7 @@ onMounted(() => {
   const scene = new THREE.Scene(); //建立場景
 
   // Object
-  const geometry = new THREE.PlaneGeometry(1, 1, 5, 5);
+  const geometry = new THREE.PlaneGeometry(1, 1, 30, 30);
   // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
   const material = new THREE.ShaderMaterial({
     vertexShader: vs,
@@ -21,8 +21,10 @@ onMounted(() => {
       time: {
         value: 0,
       },
+      uFrequency: { value: 10 },
     },
   });
+
   // Mesh
   const mesh = new THREE.Mesh(geometry, material);
 

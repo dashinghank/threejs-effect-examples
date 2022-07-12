@@ -19,3 +19,28 @@
 // 	// gl_FragColor = offset;
 
 // }
+
+uniform float time;
+float wave(float time, float freq, float amp) {
+  float angle = (time+position.y)*freq;
+  return sin(angle)*amp;
+}
+float waveNorm(float time, float freq, float amp) {
+  float angle = (time+position.y)*freq;
+  return -amp * freq * cos(angle);
+}
+void main()	{
+
+  vec3 transformed = vec3(position);
+  float freq = 3.0;
+  float amp = 0.1;
+  transformed.z += wave(time,freq,amp);
+  wave(time,freq*2.0,amp/2.0);
+  wave(time,freq*3.5,amp*0.2);
+    
+  float normWave = waveNorm(time,freq,amp);
+  waveNorm(time,freq*2.0,amp/2.0);
+  waveNorm(time,freq*3.5,amp*0.2);
+  objectNormal = normalize(vec3(0.0, normWave,1.0));
+  gl_Position =transformed;
+}
