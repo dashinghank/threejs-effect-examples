@@ -1,17 +1,28 @@
 <script setup lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import vs from "assets/shaders/test.vs.glsl?raw";
+import fs from "assets/shaders/test.fs.glsl?raw";
+import { Clock } from "three";
 
 const myCanvas = ref();
-
+const clock = new Clock();
 onMounted(() => {
   // Scene
   const scene = new THREE.Scene(); //建立場景
 
   // Object
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const geometry = new THREE.PlaneGeometry(1, 1, 5, 5);
   // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const material = new THREE.MeshNormalMaterial();
+  const material = new THREE.ShaderMaterial({
+    vertexShader: vs,
+    fragmentShader: fs,
+    uniforms: {
+      time: {
+        value: 0,
+      },
+    },
+  });
   // Mesh
   const mesh = new THREE.Mesh(geometry, material);
 
@@ -43,6 +54,9 @@ onMounted(() => {
 
   // Animate
   const tick = () => {
+    material.uniforms.time.value = clock.getElapsedTime();
+    // console.log(material.uniforms.time.value);
+    material.needsUpdate = true;
     //Controls
     orbitControl.update();
     // Render
