@@ -3,16 +3,17 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import vs from "assets/shaders/test.vs.glsl?raw";
 import fs from "assets/shaders/test.fs.glsl?raw";
-import { Clock } from "three";
+import { Clock, TextureLoader } from "three";
 
 const myCanvas = ref();
 const clock = new Clock();
-onMounted(() => {
+const textureLoader = new TextureLoader();
+onMounted(async () => {
   // Scene
   const scene = new THREE.Scene(); //建立場景
-
+  const texture = await textureLoader.loadAsync("1.jpg");
   // Object
-  const geometry = new THREE.PlaneGeometry(1, 1, 5, 5);
+  const geometry = new THREE.PlaneGeometry(10, 10, 30, 30);
   // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
   const material = new THREE.ShaderMaterial({
     vertexShader: vs,
@@ -21,8 +22,13 @@ onMounted(() => {
       time: {
         value: 0,
       },
+      uFrequency: { value: 10 },
+      uTexture: {
+        value: texture,
+      },
     },
   });
+
   // Mesh
   const mesh = new THREE.Mesh(geometry, material);
 
@@ -37,7 +43,7 @@ onMounted(() => {
 
   // Camera
   const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-  camera.position.z = 3;
+  camera.position.z = 5;
   scene.add(camera);
 
   // Renderer

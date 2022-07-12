@@ -1,6 +1,13 @@
 precision mediump float;
+varying float shadowFactor;
+varying float vDistance;
+uniform sampler2D uTexture;
+varying vec2 vUv;
 
 void main()
 {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    vec4 textureColor = texture2D(uTexture, vUv);
+    
+    vec4 textureWithShadow = vec4(textureColor.x * shadowFactor, textureColor.y * shadowFactor, textureColor.z * shadowFactor, textureColor.w);
+    gl_FragColor = textureWithShadow;   
 }
