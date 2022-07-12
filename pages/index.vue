@@ -12,9 +12,15 @@ onMounted(async () => {
   // main();
   // Scene
   const scene = new THREE.Scene(); //建立場景
-  const texture = await textureLoader.loadAsync("1.jpg");
+  const texture = await textureLoader.loadAsync(
+    "https://r105.threejsfundamentals.org/threejs/resources/images/bayer.png"
+  );
+  texture.minFilter = THREE.NearestFilter;
+  texture.magFilter = THREE.NearestFilter;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
   // Object
-  const geometry = new THREE.PlaneBufferGeometry(2, 2);
+  const geometry = new THREE.BoxGeometry(2, 2, 2, 1, 1);
   // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 
   const material = new THREE.ShaderMaterial({
@@ -27,7 +33,11 @@ onMounted(async () => {
         value: texture,
       },
       iResolution: {
-        value: { x: myCanvas.value.width, y: myCanvas.value.height, z: 1 },
+        // value: { x: myCanvas.value.width, y: myCanvas.value.height, z: 1 },
+        value: new THREE.Vector3(1, 1, 1),
+      },
+      iChannel0: {
+        value: texture,
       },
     },
   });
@@ -45,14 +55,16 @@ onMounted(async () => {
   console.log(sizes);
 
   // Camera
-  const camera = new THREE.OrthographicCamera(
-    -1, // left
-    1, // right
-    1, // top
-    -1, // bottom
-    -1, // near,
-    1 // far
-  );
+  const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10);
+  camera.position.z = 3;
+  // const camera = new THREE.OrthographicCamera(
+  //   -1, // left
+  //   1, // right
+  //   1, // top
+  //   -1, // bottom
+  //   -1, // near,
+  //   1 // far
+  // );
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({
@@ -98,7 +110,7 @@ onMounted(async () => {
     // Update renderer
     renderer.setSize(sizes.width, sizes.height);
     // Update camera
-    // camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
+    camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
     camera.updateProjectionMatrix(); //然後執行這個來更新camera內部數值
   });
   renderer.setAnimationLoop(tick);
@@ -117,7 +129,7 @@ function resizeRendererToDisplaySize(renderer) {
 </script>
 
 <template>
-  <div>
+  <div class="bg-black">
     <canvas ref="myCanvas"> </canvas>
   </div>
 </template>
