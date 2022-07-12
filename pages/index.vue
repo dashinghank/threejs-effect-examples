@@ -9,22 +9,25 @@ const myCanvas = ref();
 const clock = new Clock();
 const textureLoader = new TextureLoader();
 onMounted(async () => {
+  // main();
   // Scene
   const scene = new THREE.Scene(); //建立場景
   const texture = await textureLoader.loadAsync("1.jpg");
   // Object
-  const geometry = new THREE.PlaneGeometry(10, 10, 30, 30);
+  const geometry = new THREE.PlaneBufferGeometry(2, 2);
   // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
   const material = new THREE.ShaderMaterial({
     vertexShader: vs,
     fragmentShader: fs,
     uniforms: {
-      time: {
-        value: 0,
-      },
+      iTime: { value: 0 },
       uFrequency: { value: 10 },
       uTexture: {
         value: texture,
+      },
+      iResolution: {
+        value: { x: myCanvas.value.width, y: myCanvas.value.height, z: 1 },
       },
     },
   });
@@ -42,15 +45,21 @@ onMounted(async () => {
   console.log(sizes);
 
   // Camera
-  const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-  camera.position.z = 5;
-  scene.add(camera);
+  const camera = new THREE.OrthographicCamera(
+    -1, // left
+    1, // right
+    1, // top
+    -1, // bottom
+    -1, // near,
+    1 // far
+  );
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({
     canvas: myCanvas.value,
     antialias: true,
   });
+  renderer.autoClearColor = false;
   renderer.setSize(sizes.width, sizes.height);
 
   // Control
@@ -60,8 +69,19 @@ onMounted(async () => {
 
   // Animate
   const tick = () => {
-    material.uniforms.time.value = clock.getElapsedTime();
     // console.log(material.uniforms.time.value);
+    resizeRendererToDisplaySize(renderer);
+
+    material.uniforms.iResolution.value = {
+      x: myCanvas.value.width,
+      y: myCanvas.value.height,
+      z: 1,
+    };
+
+    material.uniforms.iTime.value = clock.getElapsedTime();
+
+    renderer.render(scene, camera);
+
     material.needsUpdate = true;
     //Controls
     orbitControl.update();
@@ -78,11 +98,22 @@ onMounted(async () => {
     // Update renderer
     renderer.setSize(sizes.width, sizes.height);
     // Update camera
-    camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
+    // camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
     camera.updateProjectionMatrix(); //然後執行這個來更新camera內部數值
   });
   renderer.setAnimationLoop(tick);
 });
+
+function resizeRendererToDisplaySize(renderer) {
+  const canvas = renderer.domElement;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  const needResize = canvas.width !== width || canvas.height !== height;
+  if (needResize) {
+    renderer.setSize(width, height, false);
+  }
+  return needResize;
+}
 </script>
 
 <template>
