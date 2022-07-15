@@ -1,20 +1,20 @@
-uniform float iTime;
-uniform vec3 iResolution;
+precision mediump float;
+varying vec4 vModelPosition;
 
-void main(){
-    float t = iTime;
-    vec2 r = iResolution.xy;
-	vec3 c;
-	float l,z=t;
-	for(int i=0;i<3;i++) {
-		vec2 uv,p=gl_FragCoord.xy/r;
-		uv=p;
-		p-=.5;
-		p.x*=r.x/r.y;
-		z+=.07;
-		l=length(p);
-		uv+=p/l*(sin(z)+1.)*abs(sin(l*9.-z-z));
-		c[i]=.01/length(mod(uv,1.)-.5);
-	}
-	gl_FragColor=vec4(c/l,t);
+uniform sampler2D dTexture;
+uniform sampler2D uTexture;
+varying vec2 vUv;
+uniform vec4 resolution;
+uniform float aspect;
+uniform float uDim;
+
+void main()
+{
+  // aspect為螢幕比例, 這裡的算法是該點先往左上退整張圖的一半, 在依長寬比例回縮, 最後再回歸位置
+    // vec2 newUV = (vUv - vec2(0.5))*(1.5/1.0) + vec2(0.5);
+	  vec4 offset = texture2D(dTexture ,vUv);
+    offset = offset*vec4(uDim,uDim,uDim,offset.a);
+    gl_FragColor = texture2D(uTexture,vUv);
+    gl_FragColor = texture2D(uTexture,vUv - 0.1 * offset.rg);
+    
 }

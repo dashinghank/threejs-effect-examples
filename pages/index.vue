@@ -3,37 +3,64 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import vs from "assets/shaders/test.vs.glsl?raw";
 import fs from "assets/shaders/test.fs.glsl?raw";
-import { Clock, TextureLoader } from "three";
+import { TextureLoader } from "three";
+import gsap from "gsap";
 
 const myCanvas = ref();
-const clock = new Clock();
-const textureLoader = new TextureLoader();
+
 onMounted(async () => {
-  // main();
+  const textureLoader = new TextureLoader();
   // Scene
   const scene = new THREE.Scene(); //建立場景
-  const texture = await textureLoader.loadAsync("1.jpg");
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+  scene.add(ambientLight);
   // Object
-  const geometry = new THREE.PlaneBufferGeometry(2, 2);
-  // const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  var geometry = new THREE.PlaneGeometry(3, 2); //矩形平面
+  /**
+   * 创建纹理对象的像素数据
+   */
+  var width = 128; //纹理宽度
+  var height = 64; //纹理高度
+  var size = width * height; //像素大小
+  var data = new Uint8Array(size * 4); //size*4：像素在缓冲区占用空间
+  for (let i = 0; i < size * 4; i += 4) {
+    // 随机设置RGB分量的值
+    data[i] = 255 * Math.random();
+    data[i + 1] = 255 * Math.random();
+    data[i + 2] = 255 * Math.random();
+    // 设置透明度分量A
+    data[i + 3] = 255;
+  }
+  // 创建数据文理对象   RGBA格式：THREE.RGBAFormat
+  var uTexture = await textureLoader.loadAsync("1.jpg");
+  var dTexture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
 
-  const material = new THREE.ShaderMaterial({
-    vertexShader: vs,
+  dTexture.needsUpdate = true; //纹理更新
+  //打印纹理对象的image属性
+
+  var material = new THREE.ShaderMaterial({
     fragmentShader: fs,
+    vertexShader: vs,
     uniforms: {
-      iTime: { value: 0 },
-      uFrequency: { value: 10 },
-      uTexture: {
-        value: texture,
-      },
-      iResolution: {
-        value: { x: myCanvas.value.width, y: myCanvas.value.height, z: 1 },
-      },
+      uTexture: { value: uTexture },
+      dTexture: { value: dTexture },
+      uDim: { value: 1 },
+    },
+    // map: texture, // 设置纹理贴图
+    transparent: true, //允许透明设置
+  });
+
+  // console.log(.data);
+
+  gsap.to(material.uniforms.uDim, {
+    value: 0,
+    duration: 0.5,
+    onUpdate: () => {
+      material.needsUpdate = true;
     },
   });
 
-  // Mesh
-  const mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, material);
 
   scene.add(mesh);
 
@@ -45,21 +72,15 @@ onMounted(async () => {
   console.log(sizes);
 
   // Camera
-  const camera = new THREE.OrthographicCamera(
-    -1, // left
-    1, // right
-    1, // top
-    -1, // bottom
-    -1, // near,
-    1 // far
-  );
+  const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
+  camera.position.z = 3;
+  scene.add(camera);
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({
     canvas: myCanvas.value,
     antialias: true,
   });
-  renderer.autoClearColor = false;
   renderer.setSize(sizes.width, sizes.height);
 
   // Control
@@ -69,20 +90,6 @@ onMounted(async () => {
 
   // Animate
   const tick = () => {
-    // console.log(material.uniforms.time.value);
-    resizeRendererToDisplaySize(renderer);
-
-    material.uniforms.iResolution.value = {
-      x: myCanvas.value.width,
-      y: myCanvas.value.height,
-      z: 1,
-    };
-
-    material.uniforms.iTime.value = clock.getElapsedTime();
-
-    renderer.render(scene, camera);
-
-    material.needsUpdate = true;
     //Controls
     orbitControl.update();
     // Render
@@ -98,22 +105,11 @@ onMounted(async () => {
     // Update renderer
     renderer.setSize(sizes.width, sizes.height);
     // Update camera
-    // camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
+    camera.aspect = sizes.width / sizes.height; //這個值是預防圖像扭曲
     camera.updateProjectionMatrix(); //然後執行這個來更新camera內部數值
   });
   renderer.setAnimationLoop(tick);
 });
-
-function resizeRendererToDisplaySize(renderer) {
-  const canvas = renderer.domElement;
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  const needResize = canvas.width !== width || canvas.height !== height;
-  if (needResize) {
-    renderer.setSize(width, height, false);
-  }
-  return needResize;
-}
 </script>
 
 <template>
